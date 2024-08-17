@@ -1,3 +1,9 @@
+"""
+Data Definition Language. Contains tuples of SQL commands that define and create the schemas and tables
+for the PostgreSQL database. Also contains SQL commands for normalizing data, resetting the database,
+and joining port data to the immigration table.
+"""
+
 set_up_postgres = ("""CREATE SCHEMA IF NOT EXISTS raw""",
 """SET search_path TO raw""",
 """
@@ -32,7 +38,7 @@ fltno       CHAR(5),
 visatype    CHAR(3)
 )
 """,
-            
+
 """CREATE TABLE IF NOT EXISTS raw.demographics(
 city                      CHAR(100),
 state                     CHAR(100),

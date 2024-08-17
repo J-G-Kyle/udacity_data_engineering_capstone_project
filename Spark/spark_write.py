@@ -1,9 +1,15 @@
-from spark_utils import logger_config, create_session, read_file_into_spark_dataframe, write_spark_dataframe_to_postgres
-from pathlib import Path
+"""
+Read initial data from data directory. Reads immigration data from SAS sub-folder, us-cities-demographics,
+and airport codes. Uses Spark to read them to dataframes, then writes to the relevant raw tables in PostgreSQL.
+Validates count written to each table matches row counts in dataframes.
+"""
 import os
 import sys
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from pathlib import Path
+from Spark.spark_utils import (logger_config, create_session,
+                               read_file_into_spark_dataframe, write_spark_dataframe_to_postgres)
 from PostgreSQL.postgres_utils import row_count_validation, specific_row_count_validation
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 if __name__ == '__main__':
 

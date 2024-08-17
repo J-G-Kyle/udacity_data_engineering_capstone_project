@@ -1,11 +1,14 @@
-from spark_utils import (logger_config, create_session,
+"""
+Specific functions for performing required transformations in Spark to move data from raw to int schema.
+
+"""
+from Spark.spark_utils import (logger_config, create_session,
                          read_table_from_postgres_to_spark,
                          convert_date_to_ISO8601, drop_duplicates_in_dataframe)
+from Spark.transformation_dicts import modes, visa_types, addrs, I94CIT_I94RES
+from Spark.spark_utils import write_spark_dataframe_to_postgres
 from pyspark.sql.types import IntegerType, StringType, LongType, FloatType, DecimalType
-from pyspark.sql.functions import col, split, length
-from transformation_dicts import modes, visa_types, addrs, I94CIT_I94RES
-from spark_utils import write_spark_dataframe_to_postgres
-from pyspark.sql import functions as sf
+from pyspark.sql.functions import col, split
 
 def immigration_transformation():
     """Reads the raw.immigration table into memory
@@ -99,7 +102,7 @@ def immigration_transformation():
     write_spark_dataframe_to_postgres(immigration_df, "int", "immigration", "overwrite")
 
 def demographics_transformation():
-    """Reads the raw.demographics table into memory
+    """Reads the raw.demographics table into a spark dataframe
        Casts data to more appropriate data types
        Writes the transformed and pre-normalized data to int.cities, int.racial_demographics, and int.demographics"""
     # Demographics transformations
@@ -131,6 +134,10 @@ def demographics_transformation():
     write_spark_dataframe_to_postgres(demo_df, "int", "demographics", "append")
 
 def airport_codes_transformation():
+    """Reads the raw.airport_codes table into a spark dataframe
+       Casts data to more appropriate data types
+       Splits coordinates into two columns: latitude and longitude. Drops the coordinates.
+       Writes the transformed data to int.airport_codes"""
     # Read raw.airport codes into dataframe
     air_df = read_table_from_postgres_to_spark(spark, "raw", "airport_codes")
 
@@ -170,6 +177,3 @@ if __name__ == '__main__':
 
     # Close spark
     spark.stop()
-
-
-

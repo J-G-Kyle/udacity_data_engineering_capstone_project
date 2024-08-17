@@ -1,7 +1,11 @@
-import psycopg2
-from postgres_utils import load_config, connect
-from DDL import reset
+"""
+Execute the reset statements from PostgreSQL in the database specified by the config file.
+This will drop the schemas raw and int, and all associatated objects.
+"""
 import logging
+import psycopg2
+from PostgreSQL.postgres_utils import load_config, connect
+from PostgreSQL.ddl import reset
 
 if __name__ == '__main__':
 
@@ -16,7 +20,7 @@ if __name__ == '__main__':
             with conn.cursor() as cur:
                 # execute the reset statements
                 for command in reset:
-                    logging.info(f"Running: {command}")
+                    logging.info(("Running: %s"), command)
                     cur.execute(command)
                 conn.commit()
         conn.close()

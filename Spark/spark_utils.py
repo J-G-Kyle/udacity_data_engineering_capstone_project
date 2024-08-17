@@ -1,7 +1,12 @@
-from pyspark.sql import SparkSession
-from pyspark import SparkConf
+"""
+Spark utilities. Set of functions for reading and writing spark dataframes to and from a PostgreSQL database.
+Also includes functions to manage logging, creating spark sessions, and performing specific transformations
+on dataframes.
+"""
 import configparser
 import logging
+from pyspark.sql import SparkSession
+from pyspark import SparkConf
 from pyspark.sql.functions import to_date, expr, col
 
 def logger_config():

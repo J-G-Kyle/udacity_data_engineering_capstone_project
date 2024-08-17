@@ -1,11 +1,11 @@
-import psycopg2
-from psycopg2 import sql
 import logging
 from configparser import ConfigParser
+import psycopg2
+from psycopg2 import sql
 from pyspark.sql import DataFrame
-import os
 
-def load_config(filename: str ='/Users/jonathankyle/PycharmProjects/Udacity_DE_Capstone/PostgreSQL/config.ini', section: str ='postgresql') -> dict:
+def load_config(filename: str ='/Users/jonathankyle/PycharmProjects/Udacity_DE_Capstone/PostgreSQL/config.ini',
+                section: str ='postgresql') -> dict:
     """Connect to PostgreSQL database using the parameters in a .ini file
        Arguments:
            filename: name of config file, defaults to 'config.ini'
@@ -22,7 +22,7 @@ def load_config(filename: str ='/Users/jonathankyle/PycharmProjects/Udacity_DE_C
         for param in params:
             config[param[0]] = param[1]
     else:
-        raise Exception('Section {0} not found in the {1} file'.format(section, filename))
+        raise ValueError(f'Section {section} not found in the {filename} file')
 
     return config
 
@@ -39,6 +39,7 @@ def connect(config):
             return conn
     except (psycopg2.DatabaseError, Exception) as error:
         print(error)
+        return None
 
 def run_sql_commands(commands: tuple | str):
     """Connects to the PostgreSQL server and run a series of SQL commands
@@ -55,10 +56,10 @@ def run_sql_commands(commands: tuple | str):
             with conn.cursor() as cur:
                 if isinstance(commands, tuple):
                     for command in commands:
-                        logging.info(f"Running: {command}")
+                        logging.info(("Running: %s"), command)
                         cur.execute(command)
                 elif isinstance(commands, str):
-                    logging.info(f"Running: {commands}")
+                    logging.info(("Running: %s"), commands)
                     cur.execute(commands)
             conn.commit()
         conn.close()
@@ -68,12 +69,14 @@ def run_sql_commands(commands: tuple | str):
     logging.info("All commands executed successfully")
 
 def insert_tuple_to_table(table_schema: str, table_name: str , values: list):
-    """Connects to the PostgreSQL server and run a series of insert SQL commands. Inserts the values held in a list of tuples
+    """Connects to the PostgreSQL server and run a series of insert SQL commands.
+       Inserts the values held in a list of tuples
        into the columns found in the specified table
        Arguments:
            table_schema: schema of table to insert into
            table_name: name of table to insert into
-           values: values to be inserted. Must be a list of tuples, where each tuple represents one row in the correct order of columns."""
+           values: values to be inserted. Must be a list of tuples, where each tuple
+                   represents one row in the correct order of columns."""
     logging.basicConfig(level=logging.DEBUG,
                         format='%(asctime)s - %(levelname)s - %(message)s',
                         datefmt='%Y-%m-%d %H:%M:%S')
@@ -138,13 +141,16 @@ def row_count_validation(table_schema: str, table_name: str, inserted_object: li
         insertion_count = len(inserted_object)
     elif isinstance(inserted_object, DataFrame):
         insertion_count = inserted_object.count()
+    else:
+        raise ValueError(f"Inserted object must be a list or a dataframe. Inserted object is instead {type(inserted_object)}")
     logging.info(f"Inserted object contains {insertion_count} items.")
 
     if raise_error:
-        if table_row_count != insertion_count: raise ValueError(f"Row count between {type(inserted_object)} and table {table_schema}.{table_name} does not match."
-                                                                f"Table {table_schema}.{table_name} contains {table_row_count} rows."
-                                                                f"Object {type(inserted_object)} contains {insertion_count} rows.")
-        else: logging.info(f"Row count between {type(inserted_object)} and table {table_schema}.{table_name} matches. Both have {table_row_count} rows")
+        if table_row_count != insertion_count:
+            raise ValueError(f"Row count between {type(inserted_object)} and table {table_schema}.{table_name} does not match."
+                             f"Table {table_schema}.{table_name} contains {table_row_count} rows."
+                             f"Object {type(inserted_object)} contains {insertion_count} rows.")
+        logging.info(f"Row count between {type(inserted_object)} and table {table_schema}.{table_name} matches. Both have {table_row_count} rows")
     else:
         if table_row_count == insertion_count:
             logging.info(f"Row count between {type(inserted_object)} and table {table_schema}.{table_name} matches. Both have {table_row_count} rows")
@@ -184,9 +190,8 @@ def specific_row_count_validation(table_schema: str, table_name: str, row_count:
                 f"Specified row count and table {table_schema}.{table_name} row count do not match."
                 f"Table {table_schema}.{table_name} contains {table_row_count} rows."
                 f"Specified row count of {row_count}.")
-        else:
-            logging.info(
-                f"Specified row count and table {table_schema}.{table_name} row count match. Both have {table_row_count} rows")
+        logging.info(
+            f"Specified row count and table {table_schema}.{table_name} row count match. Both have {table_row_count} rows")
     else:
         if table_row_count == row_count:
             logging.info(

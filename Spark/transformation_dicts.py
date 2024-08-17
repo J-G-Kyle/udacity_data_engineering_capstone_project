@@ -1,3 +1,7 @@
+"""
+Dictionary of values that Spark/spark_transform will use to replace codes or abbreviations to more readable
+values. Dictionary values are sourced from data/I94_SAS_Labels_Descriptions.SAS
+"""
 visa_types = {
     '1.0': 'Business',
     '2.0': 'Pleasure',
