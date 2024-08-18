@@ -73,5 +73,11 @@ migrate the PostgreSQL database to a serivce such as AWS RDS, Google Cloud SQL, 
 Each of these offers to manage and host the database for a fee, and allow you to access it using your choice of 
 query interface through a secure web connection.
 
+## Limitations and further work
+Currently the pipeline will drop all schemas within the database and re-create all tables. This is sufficient for a 
+static database, but is not appropriate for a database that is regularly updated. Next steps would be to create a 
+modified version capable of detecting new files and appending them to the relevant tables.
 
-
+This project contains no orchestration, and ideally once the above modification is ready, I would add a docker 
+instance of airflow that could trigger the required tasks to perform the ETL to append the raw and transformed data, 
+then refresh the materialized views.
