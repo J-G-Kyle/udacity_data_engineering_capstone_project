@@ -13,74 +13,82 @@ i94yr       FLOAT,
 i94mon      FLOAT,
 i94cit      FLOAT,
 i94res      FLOAT,
-i94port     CHAR(3),
+i94port     VARCHAR,
 arrdate     FLOAT,
 i94mode     FLOAT,
-i94addr     CHAR(2),
+i94addr     VARCHAR,
 depdate     FLOAT,
 i94bir      FLOAT,
 i94visa     FLOAT,
 count       FLOAT,
-dtadfile    CHAR(8),
-visapost    CHAR(3),
-occup       CHAR(3),
-entdepa     CHAR(1),
-entdepd     CHAR(1),
-entdepu     CHAR(1),
-matflag     CHAR(1),
+dtadfile    VARCHAR,
+visapost    VARCHAR,
+occup       VARCHAR,
+entdepa     VARCHAR,
+entdepd     VARCHAR,
+entdepu     VARCHAR,
+matflag     VARCHAR,
 biryear     FLOAT,
-dtaddto     CHAR(10),
-gender      CHAR(1),
-insnum      CHAR(30),
-airline     CHAR(3),
+dtaddto     VARCHAR,
+gender      VARCHAR,
+insnum      VARCHAR,
+airline     VARCHAR,
 admnum      FLOAT,
-fltno       CHAR(5),
-visatype    CHAR(3)
+fltno       VARCHAR,
+visatype    VARCHAR
 )
 """,
 
 """CREATE TABLE IF NOT EXISTS raw.demographics(
-city                      CHAR(100),
-state                     CHAR(100),
+city                      VARCHAR,
+state                     VARCHAR,
 median_age                FLOAT,
 male_population           INTEGER,
 female_population         INTEGER,
 total_population          INTEGER,
 number_of_veterans        INTEGER,
-foreign_born              CHAR(100),
-average_household_size    CHAR(100),
-state_code                CHAR(100),
-race                      CHAR(100),
-count                     CHAR(100)
+foreign_born              VARCHAR,
+average_household_size    VARCHAR,
+state_code                VARCHAR,
+race                      VARCHAR,
+count                     VARCHAR
 )
 """,
 
 """CREATE TABLE IF NOT EXISTS raw.airport_codes(
-ident            CHAR(100),
-type             CHAR(100),
-name             CHAR(130),
-elevation_ft     CHAR(100),
-continent        CHAR(100),
-iso_country      CHAR(100),
-iso_region       CHAR(100),
-municipality     CHAR(100),
-gps_code         CHAR(100),
-iata_code        CHAR(100),
-local_code       CHAR(100),
-coordinates      CHAR(100)
+ident            VARCHAR,
+type             VARCHAR,
+name             VARCHAR,
+elevation_ft     VARCHAR,
+continent        VARCHAR,
+iso_country      VARCHAR,
+iso_region       VARCHAR,
+municipality     VARCHAR,
+gps_code         VARCHAR,
+iata_code        VARCHAR,
+local_code       VARCHAR,
+coordinates      VARCHAR
 )
 """,
 
 """CREATE TABLE IF NOT EXISTS raw.i94_country_codes(
 i94code         INT,
-country         CHAR(100)
+country         VARCHAR
 )
 """,
 
 """CREATE TABLE IF NOT EXISTS raw.i94_port_codes(
-i94_port_code       CHAR(3),
-city                CHAR(100),
-state               CHAR(100)
+i94_port_code       VARCHAR,
+city                VARCHAR,
+state               VARCHAR
+)
+""",
+
+"""CREATE TABLE IF NOT EXISTS raw.global_temperatures(
+dt                              VARCHAR,
+AverageTemperature              VARCHAR,
+AverageTemperatureUncertainty   VARCHAR,
+Country                         VARCHAR
 )
 """
 )
@@ -94,42 +102,42 @@ WHERE "state" = ''"""
 set_up_intermediate_schema = ("""CREATE SCHEMA IF NOT EXISTS int""",
 """SET search_path TO int""",
 """
-CREATE TABLE IF NOT EXISTS immigration(
+CREATE TABLE IF NOT EXISTS int.immigration(
 cicid               INT PRIMARY KEY,
 year                INT,
 month               INT,
-citizenship_country CHAR(100),
-residency_country   CHAR(100),
-i94port_code        CHAR(3),
-port_city           CHAR(100),
-port_state          CHAR(100),
+citizenship_country VARCHAR,
+residency_country   VARCHAR,
+i94port_code        VARCHAR,
+port_city           VARCHAR,
+port_state          VARCHAR,
 arrival_date        DATE,
-arrival_mode        CHAR(100),
-state               CHAR(30),
+arrival_mode        VARCHAR,
+state               VARCHAR,
 departure_date      DATE,
 age_in_years        INT,
-visa_purpose        CHAR(20),
+visa_purpose        VARCHAR,
 date_added_to_files DATE,
-visapost            CHAR(3),
-occupation          CHAR(3),
-arrival_flag        CHAR(1),
-departure_flag      CHAR(1),
-update_flag         CHAR(1),
-match_flag          CHAR(1),
+visapost            VARCHAR,
+occupation          VARCHAR,
+arrival_flag        VARCHAR,
+departure_flag      VARCHAR,
+update_flag         VARCHAR,
+match_flag          VARCHAR,
 birth_year          INT,
 admitted_until      DATE,
-gender              CHAR(1),
-insnum              CHAR(1),
-airline             CHAR(3),
+gender              VARCHAR,
+insnum              VARCHAR,
+airline             VARCHAR,
 admnum              BIGINT,
-flight_number       CHAR(5),
-visa_type           CHAR(3)
+flight_number       VARCHAR,
+visa_type           VARCHAR
 )
 """,
 
-"""CREATE TABLE IF NOT EXISTS demographics(
-city                      CHAR(100),
-state_name                CHAR(100),
+"""CREATE TABLE IF NOT EXISTS int.demographics(
+city                      VARCHAR,
+state_name                VARCHAR,
 median_age                NUMERIC(3,1),
 male_population           INT,
 female_population         INT,
@@ -137,49 +145,82 @@ total_population          INT,
 number_of_veterans        INT,
 foreign_born              INT,
 average_household_size    NUMERIC(3,2),
-state_code                CHAR(100)
+state_code                VARCHAR
 )
 """,
 
-"""CREATE TABLE IF NOT EXISTS cities(
+"""CREATE TABLE IF NOT EXISTS int.cities(
 city_id    SERIAL PRIMARY KEY,
-city       CHAR(100),
-state_code CHAR(2),
-state_name CHAR(100)
+city       VARCHAR,
+state_code VARCHAR,
+state_name VARCHAR
 )
 """,
 
-"""CREATE TABLE IF NOT EXISTS racial_demographics(
-city       CHAR(100),
-state_code CHAR(2),
-state_name CHAR(100),
-race       CHAR(100),
+"""CREATE TABLE IF NOT EXISTS int.racial_demographics(
+city       VARCHAR,
+state_code VARCHAR,
+state_name VARCHAR,
+race       VARCHAR,
 "count"    INT
 )
 """,
 
-"""CREATE TABLE IF NOT EXISTS airport_codes(
-ident            CHAR(100),
-type             CHAR(100),
-name             CHAR(130),
+"""CREATE TABLE IF NOT EXISTS int.airport_codes(
+ident            VARCHAR,
+type             VARCHAR,
+name             VARCHAR,
 elevation_ft     INT,
-continent        CHAR(100),
-iso_country      CHAR(100),
-iso_region       CHAR(100),
-municipality     CHAR(100),
-gps_code         CHAR(100),
-iata_code        CHAR(100),
-local_code       CHAR(100),
+continent        VARCHAR,
+iso_country      VARCHAR,
+iso_region       VARCHAR,
+municipality     VARCHAR,
+gps_code         VARCHAR,
+iata_code        VARCHAR,
+local_code       VARCHAR,
 latitude         FLOAT,
 longitude        FLOAT
 )
-"""
+""",
 
+"""CREATE TABLE IF NOT EXISTS int.global_temperatures(
+record_date                     DATE,
+average_temperature             FLOAT,
+average_temperature_uncertainty FLOAT,
+country                         VARCHAR
+)
+"""
+)
+
+set_up_presentation_schema = ("""CREATE SCHEMA IF NOT EXISTS prs""",
+"""SET search_path TO prs""",
+"""
+CREATE MATERIALIZED VIEW IF NOT EXISTS prs.immigration AS SELECT * FROM int.immigration
+""",
+
+"""CREATE MATERIALIZED VIEW IF NOT EXISTS prs.demographics AS 
+SELECT d.median_age, d.male_population, d.female_population, d.total_population,
+	   d.number_of_veterans, d.foreign_born, d.average_household_size, c.city, c.state_code, c.state_name,
+	   r.race, r.count
+FROM int.demographics d
+JOIN int.cities c ON d.city_id = c.city_id
+JOIN int.racial_demographics r ON r.city = c.city
+""",
+
+"""CREATE MATERIALIZED VIEW IF NOT EXISTS prs.cities AS SELECT * FROM int.cities
+""",
+
+"""CREATE MATERIALIZED VIEW IF NOT EXISTS prs.airport_codes AS SELECT * FROM int.airport_codes
+""",
+
+"""CREATE MATERIALIZED VIEW IF NOT EXISTS prs.global_temperatures AS SELECT * FROM int.global_temperatures
+"""
 )
 
 reset = (
     """DROP SCHEMA IF EXISTS raw CASCADE""",
-    """DROP SCHEMA IF EXISTS int CASCADE"""
+    """DROP SCHEMA IF EXISTS int CASCADE""",
+    """DROP SCHEMA IF EXISTS prs CASCADE"""
 )
 
 normalize_demographics = (
@@ -221,8 +262,5 @@ ADD COLUMN port_state_or_country VARCHAR DEFAULT NULL""",
 """UPDATE int.immigration AS imm
 SET port_city = ports.city, port_state_or_country = ports.state
 FROM raw.i94_port_codes AS ports
-WHERE imm.port_code = ports.i94_port_code""",
-
-"""ALTER TABLE int.immigration
-DROP COLUMN port_code"""
+WHERE imm.port_code = ports.i94_port_code"""
 )

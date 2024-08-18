@@ -2,6 +2,9 @@
 Execute the reset statements from PostgreSQL in the database specified by the config file.
 This will drop the schemas raw and int, and all associatated objects.
 """
+import os
+import sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 import logging
 import psycopg2
 from PostgreSQL.postgres_utils import load_config, connect

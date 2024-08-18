@@ -5,11 +5,11 @@ Validates count written to each table matches row counts in dataframes.
 """
 import os
 import sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from pathlib import Path
 from Spark.spark_utils import (logger_config, create_session,
                                read_file_into_spark_dataframe, write_spark_dataframe_to_postgres)
 from PostgreSQL.postgres_utils import row_count_validation, specific_row_count_validation
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 if __name__ == '__main__':
 
@@ -36,6 +36,7 @@ if __name__ == '__main__':
     airport_codes_df = read_file_into_spark_dataframe(spark,"../data/airport-codes_csv.csv","csv")
     write_spark_dataframe_to_postgres(airport_codes_df, "raw", "airport_codes", "overwrite")
     row_count_validation("raw", "airport_codes", airport_codes_df, raise_error=True)
+
     # Read demographics data into raw.demographics
     demographics_df = read_file_into_spark_dataframe(spark, "../data/us-cities-demographics.csv", "csv", delimiter=";")
 
@@ -59,7 +60,13 @@ if __name__ == '__main__':
         if old_name in demographics_df.columns:
             demographics_df = demographics_df.withColumnRenamed(old_name, new_name)
 
+    # Write demogrpahics data to raw.demographics table
     write_spark_dataframe_to_postgres(demographics_df, "raw", "demographics", "overwrite")
     row_count_validation("raw", "demographics", demographics_df, raise_error=True)
+
+    # Read temperature data from csv file
+    global_temperatures_df = read_file_into_spark_dataframe(spark,"../data/GlobalLandTemperaturesByCountry.csv","csv")
+    write_spark_dataframe_to_postgres(global_temperatures_df, "raw", "global_temperatures", "append")
+    row_count_validation("raw", "global_temperatures", global_temperatures_df, raise_error=True)
 
     spark.stop()

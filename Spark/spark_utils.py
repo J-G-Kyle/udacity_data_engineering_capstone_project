@@ -5,7 +5,7 @@ on dataframes.
 """
 import configparser
 import logging
-from pyspark.sql import SparkSession
+from pyspark.sql import SparkSession, DataFrame
 from pyspark import SparkConf
 from pyspark.sql.functions import to_date, expr, col
 
@@ -15,7 +15,7 @@ def logger_config():
     logging.basicConfig(level=logging.DEBUG,
                         format='%(asctime)s - %(levelname)s - %(message)s',
                         datefmt='%Y-%m-%d %H:%M:%S')
-    logging.getLogger('pyspark').setLevel((logging.ERROR))
+    logging.getLogger('pyspark').setLevel(logging.ERROR)
     logging.getLogger("py4j").setLevel(logging.INFO)
 
 def create_session(nodes:str = "2", driver_memory:str = "2g") -> object:
@@ -49,13 +49,13 @@ def read_file_into_spark_dataframe(session, filepath: str, fileformat: str, deli
             Spark dataframe
             :rtype: object"""
     logging.info(f"Reading {fileformat} file from {filepath} into dataframe")
-    Dataframe = session.read.format(fileformat) \
+    dataframe = session.read.format(fileformat) \
         .option("header", "true") \
         .option("delimiter", delimiter) \
         .load(filepath)
-    logging.info(f"Dataframe created with {Dataframe.count()} rows")
+    logging.info(f"Dataframe created with {dataframe.count()} rows")
 
-    return Dataframe
+    return dataframe
 
 def write_spark_dataframe_to_postgres(dataframe: object, schema: str, table_name: str, mode: str):
     """Take a spark dataframe and write it to a postgres table
@@ -64,7 +64,9 @@ def write_spark_dataframe_to_postgres(dataframe: object, schema: str, table_name
                 dataframe: dataframe to be written to PostgreSQL table
                 schema: Schema name
                 table_name: Table name
-                mode: PysparkSQL write mode to be used, e.g. 'overwrite', 'append'. See https://api-docs.databricks.com/python/pyspark/latest/pyspark.sql/api/pyspark.sql.DataFrameWriter.mode.html """
+                mode: PysparkSQL write mode to be used, e.g. 'overwrite', 'append'.
+                See https://api-docs.databricks.com/python/pyspark/latest/pyspark.sql/api/pyspark.sql.DataFrameWriter.mode.html
+                """
 
     # Get url and properties from config
     config = configparser.ConfigParser()
@@ -83,14 +85,14 @@ def write_spark_dataframe_to_postgres(dataframe: object, schema: str, table_name
 
     logging.info(f"Wrote dataframe of {dataframe.count()} rows to Postgres table {schema+'.'+table_name} using {mode} mode for user {config['postgresql']['user']}")
 
-def read_table_from_postgres_to_spark(session: object, schema: str, table_name: str) -> object:
+def read_table_from_postgres_to_spark(session: object, schema: str, table_name: str) -> DataFrame:
     """ Read a postgres table into a spark dataframe
         Arguments:
             session: spark session to use
             schema: Postgres schema you want to read from
             table_name: name of the table you want to read
-        Returns: Spark dataframe object
-        :rtype: object"""
+        Returns: Spark dataframe object containing all rows from a table
+        :rtype: DataFrame"""
 
     # Get url and properties from config
     config = configparser.ConfigParser()
@@ -113,7 +115,7 @@ def convert_date_to_ISO8601(dataframe: object, column_name: str, date_type: str)
         Arguments:
             dataframe: input dataframe for date conversion. will be returned with updated columns
             column_name: string name of column to be changed
-            date_type: string type of date, must be "int" or "SAS"
+            date_type: string type of date, must be "int", "SAS",
         Returns:
             input dataframe with updated columns
             :rtype: object"""
@@ -126,7 +128,7 @@ def convert_date_to_ISO8601(dataframe: object, column_name: str, date_type: str)
 
     return dataframe
 
-def drop_duplicates_in_dataframe(dataframe: object, column_names: list = []) -> object:
+def drop_duplicates_in_dataframe(dataframe: object, column_names=None) -> object:
     """ Drop duplicates from one or more columns in a spark dataframe
         Arguments:
             dataframe: dataframe to drop duplicates from. Will be returned altered, without duplicates
@@ -135,8 +137,8 @@ def drop_duplicates_in_dataframe(dataframe: object, column_names: list = []) -> 
             dataframe: input dataframe without duplicates in specified columns
             :rtype: object"""
 
+    if column_names is None:
+        column_names = []
     dataframe = dataframe.dropDuplicates(column_names)
 
     return dataframe
-
-

@@ -1,3 +1,8 @@
+"""
+Utility functions for Postgres. Intended to be stored in this file and used in other modules. Contains functions
+for connecting to Postgres, running SQL commands, and performing validation checks that row counts match between
+tables and the inserted data.
+"""
 import logging
 from configparser import ConfigParser
 import psycopg2

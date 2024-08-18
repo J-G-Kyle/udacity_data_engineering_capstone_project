@@ -2,13 +2,18 @@
 Specific functions for performing required transformations in Spark to move data from raw to int schema.
 
 """
+import os
+import sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from Spark.spark_utils import (logger_config, create_session,
                          read_table_from_postgres_to_spark,
                          convert_date_to_ISO8601, drop_duplicates_in_dataframe)
 from Spark.transformation_dicts import modes, visa_types, addrs, I94CIT_I94RES
 from Spark.spark_utils import write_spark_dataframe_to_postgres
-from pyspark.sql.types import IntegerType, StringType, LongType, FloatType, DecimalType
+from pyspark.sql.types import IntegerType, StringType, LongType, FloatType, DecimalType, DateType
 from pyspark.sql.functions import col, split
+from PostgreSQL.postgres_utils import row_count_validation
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 def immigration_transformation():
     """Reads the raw.immigration table into memory
@@ -100,6 +105,7 @@ def immigration_transformation():
 
     # Write back to postgres int schema
     write_spark_dataframe_to_postgres(immigration_df, "int", "immigration", "overwrite")
+    row_count_validation("int", "immigration", immigration_df, raise_error=True)
 
 def demographics_transformation():
     """Reads the raw.demographics table into a spark dataframe
@@ -131,7 +137,10 @@ def demographics_transformation():
     # Normalize data into demographics
     demo_df = demo_df["city", "state_name", "median_age", "male_population", "female_population",
                       "total_population", "number_of_veterans", "foreign_born", "average_household_size", "state_code"]
+
+    # Write demographics to int.demographics
     write_spark_dataframe_to_postgres(demo_df, "int", "demographics", "append")
+    row_count_validation("int", "demographics", demo_df, raise_error=True)
 
 def airport_codes_transformation():
     """Reads the raw.airport_codes table into a spark dataframe
@@ -154,8 +163,40 @@ def airport_codes_transformation():
     # Drop coordinates column
     air_df = air_df.drop(col("coordinates"))
 
-    write_spark_dataframe_to_postgres(air_df, "int", "airport_codes", "append")
+    # Write airport codes to int.airport_codes
+    write_spark_dataframe_to_postgres(air_df, "int", "airport_codes", mode="append")
+    row_count_validation("int", "airport_codes", air_df, raise_error=True)
 
+def global_temperatures_transformation():
+    """Reads the raw.global_temperatures table into a spark dataframe
+       Casts data to more appropriate data types
+       Drops na values from temperature columns
+       Writes the transformed data to int.global_temperatures"""
+    # Read raw.global_temperatures into dataframe
+    temp_df = read_table_from_postgres_to_spark(spark, "raw", "global_temperatures")
+
+    # Cast columns to more appropriate types
+    temp_df = temp_df.withColumn("dt", temp_df["dt"].cast(DateType())) \
+                     .withColumn("averagetemperature", temp_df["averagetemperature"].cast(DecimalType(precision=5, scale=3))) \
+                     .withColumn("averagetemperatureuncertainty", temp_df["averagetemperatureuncertainty"].cast(DecimalType(precision=4, scale=3))) \
+
+    # Drop NA values from averagetemperature and averagetemperatureuncertainty
+    temp_df = temp_df.dropna(subset=['averagetemperature', 'averagetemperatureuncertainty'])
+
+    # Create a dictionary of how to rename the columns in the dataframe
+    postgres_rename_dict = {'dt':'record_date',
+                            'averagetemperature':'average_temperature',
+                            'averagetemperatureuncertainty':'average_temperature_uncertainty',
+                            }
+
+    # Rename columns in dataframe to match postgres table
+    for old_name, new_name in postgres_rename_dict.items():
+        if old_name in temp_df.columns:
+            temp_df = temp_df.withColumnRenamed(old_name, new_name)
+
+    # Write dataframe to int schema
+    write_spark_dataframe_to_postgres(temp_df, "int", "global_temperatures", "append")
+    row_count_validation("int", "global_temperatures", temp_df, raise_error=True)
 
 if __name__ == '__main__':
     # Configure the logger
@@ -174,6 +215,7 @@ if __name__ == '__main__':
 
     demographics_transformation()
     airport_codes_transformation()
+    global_temperatures_transformation()
 
     # Close spark
     spark.stop()
