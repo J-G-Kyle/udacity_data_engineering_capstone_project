@@ -167,7 +167,7 @@ race       VARCHAR,
 """,
 
 """CREATE TABLE IF NOT EXISTS int.airport_codes(
-ident            VARCHAR,
+ident            VARCHAR PRIMARY KEY,
 type             VARCHAR,
 name             VARCHAR,
 elevation_ft     INT,

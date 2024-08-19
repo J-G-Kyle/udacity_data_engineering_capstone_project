@@ -50,6 +50,50 @@ Row counts are checked to ensure they match between the table that records are w
 within the dataframe that was written to the table. Use of primary key or not null in the table schemas ensures that 
 essential columns only contain the kind of data they are supposed to.
 
+## Data model
+![Database Schema](./screenshots/database_prs_schema_diagram.jpg)
+For the `prs` schema all tables are de-normalized for easier analysis without needing to perform multiple joins. 
+
+The fact tables are:
+1. immigration
+2. demographics
+3. global_temperatures
+
+The dimension table is:
+1. airport_codes
+
+## Use Cases
+The database is intended to be used by people who can write SQL queries, and want to investigate immigration data 
+that can be enriched by temperature, demographic, or airport data.
+
+#### Sample Queries
+Find the top 10 most visited cities in the US
+`SELECT port_city, COUNT(port_city) AS city_count  
+FROM prs.immigration   
+GROUP BY port_city   
+ORDER BY city_count DESC   
+LIMIT 10   
+;`
+![top_ten_most_visited_cities](./screenshots/top_ten_most_visited_cities.jpg)
+
+See the total population and number of foreign born residents of the top five most visited cities
+`SELECT city, state_name, total_population, foreign_born
+FROM prs.demographics
+WHERE UPPER(city) IN ('NEW YORK', 'MIAMI', 'LOS ANGELES', 'SAN FRANCISCO', 'ORLANDO')
+GROUP BY city, state_name, total_population, foreign_born;`
+![top five most visited cities demographics](./screenshots/most_visited_cities_demographics.jpg)
+
+Get historical temperatures for the residency country of the same month that they visited the US
+`SELECT i.port_city, i.arrival_date, record_date,
+	   average_temperature, country
+FROM prs.global_temperatures AS t
+JOIN prs.immigration AS i
+ON i.month = date_part('month', record_date)::int
+AND UPPER(t.country) = UPPER(i.residency_country)
+ORDER BY country ASC, record_date DESC
+LIMIT 100;`
+![temperature of visitor's country in the same month](./screenshots/temp_of_visitors_country_in_same_month.jpg)
+
 ## Addressing Other Scenarios
 #### The data was increased by 100x.
 This would result in the largest table (immigration) becoming ~300M rows and ~50GB This quantity is well within 
